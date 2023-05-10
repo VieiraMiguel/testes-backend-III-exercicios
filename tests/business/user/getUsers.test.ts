@@ -1,5 +1,6 @@
 import { UserBusiness } from "../../../src/business/UserBusiness"
 import { GetUsersSchema } from "../../../src/dtos/user/getUsers.dto"
+import { BadRequestError } from "../../../src/errors/BadRequestError"
 import { USER_ROLES } from "../../../src/models/User"
 import { HashManagerMock } from "../../mocks/HashManagerMock"
 import { IdGeneratorMock } from "../../mocks/IdGeneratorMock"
@@ -38,5 +39,49 @@ describe("Testando getUsers", () => {
         role: USER_ROLES.ADMIN
       },
     ])
+  })
+
+  test('Teste de erro de token inválido', async ()=>{
+
+    expect.assertions(2)
+
+    try {
+      
+      const input = GetUsersSchema.parse({
+        token:'token-invalido'
+      })
+
+      const output = await userBusiness.getUsers(input)
+
+    } catch (error) {
+      
+      if(error instanceof BadRequestError) {
+
+        expect(error.message).toBe('token inválido')
+        expect(error.statusCode).toBe(400)
+      }
+    }
+  })
+
+  test('Teste de erro de token não autorizado', async ()=>{
+
+    expect.assertions(2)
+
+    try {
+      
+      const input = GetUsersSchema.parse({
+        token:'token-mock-fulano'
+      })
+
+      const output = await userBusiness.getUsers(input)
+
+    } catch (error) {
+      
+      if(error instanceof BadRequestError) {
+
+        expect(error.message).toBe('somente admins podem acessar')
+        expect(error.statusCode).toBe(400)
+      }
+    }
   })
 })
